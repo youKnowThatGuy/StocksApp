@@ -16,6 +16,7 @@ protocol MainViewProtocol: UIViewController{
 class MainViewController: UIViewController{
     
     @IBOutlet weak var tableView: UITableView!
+    weak var parchment: PageScrollViewController!
     var timer: Timer!
     
     var searchController: UISearchController!
@@ -41,7 +42,9 @@ class MainViewController: UIViewController{
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(false)
+        parchment.showMenu()
         presenter.loadFavourites()
+        presenter.connectToSocket()
     }
     
     func setupTimer(){
@@ -50,13 +53,16 @@ class MainViewController: UIViewController{
           userInfo: nil, repeats: true)
     }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        presenter.prepare(for: segue, sender: sender)
+    }
     
     @objc private func getData(){
         presenter.getData()
     }
     
-    
     private func setupSearchBar(){
+        
         resultsTableController = SearchStocksViewController()
         resultsTableController.suggestedSearchDelegate = self
         
@@ -65,7 +71,9 @@ class MainViewController: UIViewController{
         searchController.searchBar.placeholder = "Search"
         searchController.searchBar.delegate = self
         searchController.obscuresBackgroundDuringPresentation = false
-        tableView.tableHeaderView = searchController.searchBar
+        navigationItem.hidesSearchBarWhenScrolling = false
+        //tableView.tableHeaderView = searchController.searchBar
+        navigationItem.searchController = searchController
     }
     
     func setToSuggestedSearches() {
@@ -130,7 +138,7 @@ extension MainViewController: UISearchBarDelegate{
     }
     
     func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
-        guard let query = searchBar.text, query.count >= 2 else{
+        guard let query = searchBar.text, query.count >= 2, !query.contains(" ") else{
             return
         }
         presenter.loadStocks(query: query)
@@ -155,16 +163,19 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
         return presenter.stockCount()
     }
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        parchment.hideMenu()
+        performSegue(withIdentifier: "showDetailFromMain", sender: presenter.getSegueData(index: indexPath.row))
+    }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var cell = tableView.dequeueReusableCell(withIdentifier: StocksViewCell.identifier) as! StocksViewCell
         
         cell = presenter.prepareCell(cell: cell, index: indexPath.row)
         cell.checkTicker()
-        
         if (indexPath.row).isMultiple(of: 2){
             cell.grayView()
         }
-        
         return cell
     }
 }

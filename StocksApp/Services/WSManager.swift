@@ -14,7 +14,7 @@ class WSManager {
     private let apiKey = "c14emtn48v6t40fvebdg"
     
     private var dataArray = [StockInfo]()
-    private let mainStocks = ["YNDX","AAPL", "AMZN", "GOOGL", "TSLA", "SPCE","MRNA"]
+    private let mainStocks = ["BA","AAPL", "AMZN", "GOOGL", "TSLA", "SPCE","MRNA"]
     
     private let webSocketTask = URLSession(configuration: .default).webSocketTask(with: URL(string: "wss://ws.finnhub.io/?token=c14emtn48v6t40fvebdg")!)
     
@@ -36,12 +36,30 @@ class WSManager {
         }
         }
     }
+    
+    func subscribeToStock(ticker: String) {
+       let message = URLSessionWebSocketTask.Message.string("{\"type\":\"subscribe\",\"symbol\":\"\(ticker)\"}")
+       webSocketTask.send(message) { error in
+           if let error = error {
+               print("WebSocket couldn’t send message because: \(error)")
+           }
+       }
+   }
+    
+    func unSubscribeToStock(ticker: String) {
+       let message = URLSessionWebSocketTask.Message.string("{\"type\":\"unsubscribe\",\"symbol\":\"\(ticker)\"}")
+       webSocketTask.send(message) { error in
+           if let error = error {
+               print("WebSocket couldn’t send message because: \(error)")
+           }
+       }
+   }
 
 //функция отписки от чего либо
      func unSubscribeMainPageStocks() {
         for stock in mainStocks
         {
-           let message = URLSessionWebSocketTask.Message.string("{\"type\":\"subscribe\",\"symbol\":\"\(stock)\"}")
+           let message = URLSessionWebSocketTask.Message.string("{\"type\":\"unsubscribe\",\"symbol\":\"\(stock)\"}")
            webSocketTask.send(message) { error in
                if let error = error {
                    print("WebSocket couldn’t send message because: \(error)")

@@ -13,6 +13,7 @@ protocol FavouritePresenterProtocol{
     func loadData()
     func prepare(for segue: UIStoryboardSegue, sender: Any?)
     func prepareCell(cell: StocksViewCell, index: Int)-> StocksViewCell
+    func getSegueData(index: Int) -> String
     var tickerArray: [String] {get}
 }
 
@@ -57,7 +58,22 @@ class FavouritePresenter: FavouritePresenterProtocol{
     }
     
     func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        print("good")
+        switch segue.identifier{
+        case "showDetailFromFavourites":
+            guard let vc = segue.destination as? DetailScrollViewController,
+                  let data = sender as? String
+            else {fatalError("Invalid data passed")}
+            vc.data = data
+            WSManager.shared.unSubscribeMainPageStocks()
+        default:
+            break
+        }
+    }
+    
+    
+    func getSegueData(index: Int) -> String {
+        let data = tickerArray[index] + ";" + nameArray[index]
+        return data
     }
     
     func prepareCell(cell: StocksViewCell, index: Int) -> StocksViewCell {

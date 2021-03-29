@@ -20,6 +20,7 @@ protocol MainPresenterProtocol{
     func loadStocks(query: String)
     func switchSearch()
     func loadFavourites()
+    func getSegueData(index: Int) -> String
 }
 
 class MainPresenter: MainPresenterProtocol{
@@ -90,6 +91,15 @@ class MainPresenter: MainPresenterProtocol{
         return stockArray.count
     }
     
+    func getSegueData(index: Int) -> String {
+        if searchOn{
+            let data = searchedData[index].symbol + ";" + searchedData[index].description
+            return data
+        }
+        let data = stockArray[index].s + ";" + nameArray[index]
+        return data
+    }
+    
     func switchSearch(){
         searchedData.removeAll()
         searchOn = false
@@ -155,9 +165,17 @@ class MainPresenter: MainPresenterProtocol{
         }
     }
     
-   
     func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        print("Good!")
+        switch segue.identifier{
+        case "showDetailFromMain":
+            guard let vc = segue.destination as? DetailScrollViewController,
+                  let data = sender as? String
+            else {fatalError("Invalid data passed")}
+            vc.data = data
+            WSManager.shared.unSubscribeMainPageStocks()
+        default:
+            break
+        }
     }
     
     func loadRecentSearches() {
@@ -182,7 +200,7 @@ class MainPresenter: MainPresenterProtocol{
                 self.searchOn = true
                 WSManager.shared.unSubscribeMainPageStocks()
                 if (searchInfo.count != 0) {
-                self.view!.clearUI()
+                self.view!.updateUI()
                 }
             }
         }

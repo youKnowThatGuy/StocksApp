@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Parchment
 
 protocol FavouriteViewProtocol: UIViewController{
     func updateUI()
@@ -14,6 +15,7 @@ protocol FavouriteViewProtocol: UIViewController{
 class FavouriteViewController: UIViewController {
     
     @IBOutlet weak var tableView: UITableView!
+    weak var parchment: PageScrollViewController!
     
     var presenter: FavouritePresenterProtocol!
 
@@ -30,12 +32,17 @@ class FavouriteViewController: UIViewController {
     }
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(false)
+        parchment.showMenu()
         presenter.loadData()
         updateUI()
     }
     
     @objc func update(){
         updateUI()
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        presenter.prepare(for: segue, sender: sender)
     }
     
 
@@ -51,6 +58,12 @@ extension FavouriteViewController: UITableViewDelegate, UITableViewDataSource{
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         presenter.tickerArray.count
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        parchment.hideMenu()
+        performSegue(withIdentifier: "showDetailFromFavourites", sender: presenter.getSegueData(index: indexPath.row))
+    }
+
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var cell = tableView.dequeueReusableCell(withIdentifier: StocksViewCell.identifier) as! StocksViewCell
